@@ -39,10 +39,10 @@ COPY --chown=www-data:www-data . /var/www
 USER www-data
 
 # Run composer install
-RUN composer install --prefer-dist
+RUN composer install --ignore-platform-req=php
 
-# Expose port 9000 laravel will serve on
-EXPOSE 9000
+# Expose port 8000 laravel will serve on
+EXPOSE 8000
 
 # Start Laravel's server
-CMD php artisan serve --host=0.0.0.0 --port=9000
+CMD php artisan serve --host=0.0.0.0 --port=8000
