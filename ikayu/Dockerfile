@@ -39,7 +39,7 @@ COPY --chown=www-data:www-data . /var/www
 USER www-data
 
 # Run composer install
-RUN composer install --no-scripts --no-autoloader --prefer-dist
+RUN composer install --prefer-dist
 
 # Expose port 9000 laravel will serve on
 EXPOSE 9000
