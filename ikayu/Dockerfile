@@ -1,5 +1,5 @@
 # start from the officiall PHP 7.4 image
-FROM php:8.1-cli
+FROM php:8.1-apache
 
 # install system dependencies
 RUN apt-get update && apt-get install -y \
@@ -17,32 +17,35 @@ RUN apt-get update && apt-get install -y \
     git \
     curl 
 
-# Clear cache
-RUN apt-get clean && rm -rf /var/lib/apt/lists/*
-
 # Install PHP extensions
 RUN docker-php-ext-install pdo_mysql mbstring zip exif pcntl bcmath gd
 
-# Install composer
-RUN curl -sS https://getcomposer.org/installer | php -- --install-dir=/usr/local/bin --filename=composer
+# Copy Laravel application
+COPY . /var/www/html
 
 # Set working directory
 WORKDIR /var/www
 
+# Install Composer
+COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
+
+# Run composer install
+RUN composer install
+
 # Remove the default nginx index page
 RUN rm -rf /var/www/html
 
-# Copy exiting application directory permissions
-COPY --chown=www-data:www-data . /var/www
+# Change ownership of our applications
+RUN chown -R www-data:www-data /var/www/html
 
-# Change current user to www
-USER www-data
+RUN docker-php-ext-install mbstring
 
-# Run composer install
-RUN composer install --ignore-platform-req=php
+COPY .env.example .env
+RUN php artisan key:generate
 
-# Expose port 8000 laravel will serve on
-EXPOSE 8000
+# Expose port 80
+EXPOSE 80
 
-# Start Laravel's server
-CMD php artisan serve --host=0.0.0.0 --port=8000
+# Adjusting Apache configurations
+RUN a2enmod rewrite
+COPY apache-config.conf /etc/apache2/sites-available/000-default.conf
